@@ -20,30 +20,21 @@ jobs:
     if: needs.a.outputs.run_job_b == 'yes'
     steps:
       - run: echo "B"
-  # c:
-  #   name: c
-  #   runs-on: ubuntu-latest
-  #   needs:
-  #     - a
-  #     - b
-  #   if: |
-  #     always() &&
-  #     needs.a.result == 'success' &&
-  #     (needs.b.result == 'success' || needs.b.result == 'skipped')
-  #   steps:
-  #     - run: echo "C"
-
-      #try this 
+      - id: set
+        run: |
+          echo "::set-output name=run_job_c::no"
+    outputs:
+      run_job_c: ${{ steps.set.outputs.run_job_c }}
   c:
     name: c
     runs-on: ubuntu-latest
     needs:
       - a
       - b
-    # Use the output from job 'a' in the 'if' condition
-    if: needs.a.outputs.run_job_b == 'yes' || needs.b.result == 'skipped'
+    if: |
+      always() &&
+      needs.a.result == 'success' &&
+      (needs.b.result == 'success' || needs.b.result == 'skipped' || needs.b.outputs.run_job_c == 'yes')
     steps:
-      - run: |
-          echo "C"
-          # Access the output from job 'a'
-          echo ${{ needs.a.outputs.run_job_b }}
+      - run: echo "C"
+      
