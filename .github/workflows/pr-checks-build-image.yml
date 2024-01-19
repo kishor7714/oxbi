@@ -1,0 +1,68 @@
+name: GitHub Actions PR CHECKS to CHECK BUILD IMAGE
+
+on:
+  # To get Pull Request Comments, you need to be scanning on Pull Request
+  pull_request:
+    branches:
+      - features/*
+      - dev
+
+#   PR-Check-Docker-build:
+
+#     runs-on: ubuntu-latest
+
+#     steps:
+#     - uses: actions/checkout@v3
+#     - name: Declare some variables
+#       id: vars
+#       shell: bash
+#       run: |
+#         echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
+#     - name: Build docker image
+#       shell: bash
+#       env:
+#         DOCKER_TAG: ${{ steps.vars.outputs.branch }}-${{ steps.vars.outputs.sha_short }}
+#         PROJECT_NAME: ${{ github.event.repository.name }}
+#         BRANCH_NAME: ${{ steps.vars.outputs.branch }}
+#         COMMIT_HASH: ${{ github.sha }}
+#         APP_NAME: 'oxbi'
+#       run: |
+#           docker build . --file Dockerfile --tag ${APP_NAME}:$GITHUB_REF_NAME
+
+
+
+jobs:
+    a:
+      name: a
+      runs-on: ubuntu-latest
+      steps:
+        - run: echo "A"
+        - id: set
+          run: |
+            echo "::set-output name=run_job_b::yes"
+      outputs:
+        run_job_b: ${{ steps.set.outputs.run_job_b }}
+  
+    b:
+      name: b
+      runs-on: ubuntu-latest
+      needs:
+        - a
+      # This will always run as long as job 'a' completes successfully.
+      if: success() && needs.a.outputs.run_job_b == 'yes'
+      steps:
+        - run: echo "B"
+  
+    c:
+      name: c
+      runs-on: ubuntu-latest
+      needs:
+        - a
+        - b
+      # This will run if job 'b' was successful or skipped.
+      if: success() || needs.b.result == 'skipped'
+      steps:
+        - run: |
+           echo "C"
+           # Access the output from job 'a'
+           echo ${{ needs.a.outputs.run_job_b }}
